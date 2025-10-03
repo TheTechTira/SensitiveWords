@@ -99,6 +99,8 @@ namespace SensitiveWords.API.V1.Controllers
                         c.Response.Headers["X-TotalPages"] = p.TotalPages.ToString();
                         c.Response.Headers["X-HasNext"] = p.HasNext.ToString().ToLowerInvariant();
                         c.Response.Headers["X-HasPrev"] = p.HasPrevious.ToString().ToLowerInvariant();
+
+                        c.Response.Headers["Custom"] = "We can header what we want!";
                         // If these headers must be readable by browsers, expose them via CORS:
                         // Response.Headers["Access-Control-Expose-Headers"] = "X-Page,X-PageSize,X-TotalCount,X-TotalPages,X-HasNext,X-HasPrev";
                     }
