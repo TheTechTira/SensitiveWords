@@ -2,12 +2,7 @@
 using Moq;
 using SensitiveWords.Application.Abstractions.Repositories;
 using SensitiveWords.Infrastructure.Seed;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace SensitiveWords.API.Tests.Seed
 {

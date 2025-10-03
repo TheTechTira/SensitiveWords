@@ -1,20 +1,39 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>6415786c-2cc8-4446-a94d-7cd420b3917b</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>6415786c-2cc8-4446-a94d-7cd420b3917b</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		
+		<!-- Generate XML docs -->
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-  </ItemGroup>
+		<!-- Optional: silence missing XML warnings while you wire things up -->
+		<NoWarn>$(NoWarn);1591</NoWarn>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
+		<!-- Optional: make the filename explicit (helps when you have multiple projects) -->
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\SensitiveWords.API.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.6" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SensitiveWords.Application\SensitiveWords.Application.csproj" />
+		<ProjectReference Include="..\SensitiveWords.Infrastructure\SensitiveWords.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="sql_sensitive_list.txt">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

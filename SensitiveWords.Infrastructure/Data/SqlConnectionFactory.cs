@@ -8,7 +8,7 @@ namespace SensitiveWords.Infrastructure.Data
     /// Default SQL Server implementation of <see cref="ISqlConnectionFactory"/>.
     /// Wraps the connection string and returns a ready-to-use, open <see cref="SqlConnection"/>.
     /// </summary>
-    public sealed class SqlConnectionFactory : ISqlConnectionFactory
+    public class SqlConnectionFactory : ISqlConnectionFactory
     {
         private readonly string _connectionString;
 
