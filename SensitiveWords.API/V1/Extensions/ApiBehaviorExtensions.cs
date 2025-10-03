@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SensitiveWords.Application.Common.Responses;
 
-namespace SensitiveWords.API.Extensions
+namespace SensitiveWords.API.V1.Extensions
 {
     /// <summary>
     /// Configures a consistent API response for model validation failures produced by

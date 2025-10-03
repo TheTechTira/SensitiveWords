@@ -6,7 +6,7 @@ using SensitiveWords.Application.Attributes;
 using SensitiveWords.Application.Common.Responses;
 using SensitiveWords.Domain.Dtos;
 
-namespace SensitiveWords.API.Controllers
+namespace SensitiveWords.API.V1.Controllers
 {
     /// <summary>
     /// EXTERNAL API — Message “blooping” (masking) endpoint.
@@ -59,6 +59,7 @@ namespace SensitiveWords.API.Controllers
     [Audience(AudienceAttribute.External)]
     [Produces("application/json")]
     [Tags("Bloop")]
+    [EnableRateLimiting("BloopPerHour")]// Enable rate limiting policy at the controller level (can be overridden per action)
     public class BloopAPIController : ControllerBase
     {
         private readonly IBloopService _svc;

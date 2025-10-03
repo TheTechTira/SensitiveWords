@@ -4,7 +4,7 @@ using Microsoft.Extensions.Primitives;
 using SensitiveWords.Application.Common.Results;
 using System.Web;
 
-namespace SensitiveWords.API.Filters
+namespace SensitiveWords.API.V1.Filters
 {
     /// <summary>
     /// Writes pagination headers for responses that carry an <see cref="IPagedResult"/>.

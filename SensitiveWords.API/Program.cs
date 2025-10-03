@@ -1,24 +1,27 @@
 ﻿using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
 using SensitiveWords.API;
-using SensitiveWords.API.Extensions;
-using SensitiveWords.API.Filters;
+using SensitiveWords.API.V1.Extensions;
+using SensitiveWords.API.V1.Filters;
 using SensitiveWords.Application.Abstractions.Caching;
 using SensitiveWords.Application.Abstractions.Data;
 using SensitiveWords.Application.Abstractions.Repositories;
 using SensitiveWords.Application.Abstractions.Services;
 using SensitiveWords.Application.Attributes;
 using SensitiveWords.Application.Common.Options;
+using SensitiveWords.Application.Common.Responses;
 using SensitiveWords.Application.Services;
+using SensitiveWords.Domain.ValueObjects;
 using SensitiveWords.Infrastructure.Caching;
 using SensitiveWords.Infrastructure.Data;
 using SensitiveWords.Infrastructure.Repositories;
 using SensitiveWords.Infrastructure.Seed;
-using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +105,74 @@ builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwa
 
 #endregion
 
+#region Rate Limiting
+
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    // If you’re behind a known proxy/load balancer, register its IP(s)
+    // Example: AWS ALB, Nginx reverse proxy, etc.
+    //o.KnownProxies.Add(IPAddress.Parse("your-proxy-ip"));
+    //o.KnownProxies.Add(IPAddress.Parse("123.45.67.89"));
+});
+
+// Rate limiter constants
+const int BLOOP_LIMIT = 100;
+var BLOOP_WINDOW = TimeSpan.FromHours(1);
+
+// Future TODO/NOTE: make this user/session/token specific, this is just a generalized implementation for demostration purposes
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (context, ct) =>
+    {
+        // Add standard headers
+        context.HttpContext.Response.Headers["Retry-After-Seconds"] = ((int)BLOOP_WINDOW.TotalSeconds).ToString();
+
+        // Optionally expose a structured JSON error
+        if (!context.HttpContext.Response.HasStarted)
+        {
+            context.HttpContext.Response.ContentType = "application/json";
+            await context.HttpContext.Response.WriteAsJsonAsync(new ErrorResponse
+            {
+                Type = "https://httpstatuses.com/429",
+                Title = "Too Many Requests",
+                Status = 429,
+                TraceId = context.HttpContext.TraceIdentifier,
+                Detail = "Rate limit exceeded. Try again later."
+            }, ct);
+        }
+    };
+
+    options.AddPolicy("BloopPerHour", http =>
+    {
+        // Prefer forwarded IP if behind proxy (UseForwardedHeaders will set RemoteIpAddress)
+        var ip = http.Connection.RemoteIpAddress;
+
+        // Normalize to a stable string (IPv6-mapped IPv4 handled)
+        var keyIp = ip is null
+            ? "unknown"
+            : (ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip).ToString();
+
+        var key = $"ip:{keyIp}";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: key,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = BLOOP_LIMIT,                 // 5 requests
+                Window = BLOOP_WINDOW,  // per hour
+                QueueLimit = 0,                  // no queue → immediate 429
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            });
+    });
+});
+
+#endregion
+
 var app = builder.Build();
 
 #region Seed Sensitive Words
@@ -151,6 +222,71 @@ app.UseSwaggerUI(ui =>
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+// Rate limiting (built-in)
+app.UseRateLimiter();
+
+#region Custom Rate Limiting Response
+
+// ---- Counter middleware: adds X-RateLimit-* on success and 429s ----
+// Future TODO/NOTE: make this configurable in production per client or per key or per route
+app.Use(async (ctx, next) =>
+{
+    // Only for endpoints using our policy
+    var hasPolicy = ctx.GetEndpoint()?.Metadata
+        .GetMetadata<EnableRateLimitingAttribute>()?.PolicyName == "BloopPerHour";
+
+    if (!hasPolicy)
+    {
+        await next();
+        return;
+    }
+
+    var cache = ctx.RequestServices.GetRequiredService<IMemoryCache>();
+
+    // Same key as the policy
+    var ip = ctx.Connection.RemoteIpAddress;
+    var keyIp = ip is null ? "unknown" : (ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4() : ip).ToString();
+    var key = $"ip:{keyIp}";
+
+    var state = cache.GetOrCreate(key, entry =>
+    {
+        var resetAt = DateTimeOffset.UtcNow.Add(BLOOP_WINDOW);
+        entry.AbsoluteExpiration = resetAt;
+        return new RateLimitCounterState { Count = 0, ResetAtUtc = resetAt };
+    })!;
+
+    // Register header writer BEFORE pipeline continues
+    ctx.Response.OnStarting(() =>
+    {
+        // If the limiter rejected earlier, StatusCode will be 429 here
+        if (ctx.Response.StatusCode == StatusCodes.Status429TooManyRequests)
+        {
+            ctx.Response.Headers["X-RateLimit-Limit"] = BLOOP_LIMIT.ToString();
+            ctx.Response.Headers["X-RateLimit-Remaining"] = "0";
+            ctx.Response.Headers["X-RateLimit-Reset"] = state.ResetAtUtc.ToUnixTimeSeconds().ToString();
+
+            var retryAfter = (int)Math.Max(0, (state.ResetAtUtc - DateTimeOffset.UtcNow).TotalSeconds);
+            ctx.Response.Headers["Retry-After-Seconds"] = retryAfter.ToString();
+        }
+        else
+        {
+            // Successful request: increment count and emit headers
+            var used = Interlocked.Increment(ref state.Count);
+            var remaining = Math.Max(0, BLOOP_LIMIT - (int)used);
+
+            ctx.Response.Headers["X-RateLimit-Limit"] = BLOOP_LIMIT.ToString();
+            ctx.Response.Headers["X-RateLimit-Remaining"] = remaining.ToString();
+            ctx.Response.Headers["X-RateLimit-Reset"] = state.ResetAtUtc.ToUnixTimeSeconds().ToString();
+        }
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+
+#endregion
 
 app.MapControllers();
 

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using SensitiveWords.Application.Common.Responses;
 using System.Diagnostics;
 
-namespace SensitiveWords.API.Filters
+namespace SensitiveWords.API.V1.Filters
 {
     /// <summary>
     /// Global MVC exception filter that converts unhandled exceptions into a consistent error envelope.
