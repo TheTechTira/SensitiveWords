@@ -6,15 +6,11 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>6415786c-2cc8-4446-a94d-7cd420b3917b</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-		
-		<!-- Generate XML docs -->
+
+		<!-- Enable XML docs so Swagger can read your <summary>, <remarks>, param docs, etc. -->
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-
-		<!-- Optional: silence missing XML warnings while you wire things up -->
 		<NoWarn>$(NoWarn);1591</NoWarn>
-
-		<!-- Optional: make the filename explicit (helps when you have multiple projects) -->
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\SensitiveWords.API.xml</DocumentationFile>
+		<!-- ignore "missing XML doc" warnings -->
 	</PropertyGroup>
 
 	<ItemGroup>

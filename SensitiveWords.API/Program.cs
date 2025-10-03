@@ -40,20 +40,40 @@ builder.Services.Configure<SensitiveWordPolicyOptions>(builder.Configuration.Get
 
 #region DI
 
-// lifetimes
+// Options pattern
 builder.Services.AddOptions();
-builder.Services.AddMemoryCache();
 
+#region Caching
+
+// In-memory cache for compiled regex
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IWordsCache, WordsCache>();
+
+#endregion
+
+#region DB
+
+// Dapper + SQL Server
 builder.Services.AddSingleton<IDapperExecutor, DapperExecutor>();
 builder.Services.AddSingleton<ISqlConnectionFactory>(new SqlConnectionFactory(cs));
 
+#endregion
+
+#region Repositories
+
 builder.Services.AddScoped<ISensitiveWordRepository, SensitiveWordRepository>();
 
-// singleton cache wrapper
-builder.Services.AddSingleton<IWordsCache, WordsCache>();
+#endregion
 
-// scoped service using the cache
+#region Services
+
+// word crud service
 builder.Services.AddScoped<ISensitiveWordService, SensitiveWordService>();
+
+// scoped bloop service using the cache
+builder.Services.AddScoped<IBloopService, BloopService>();
+
+#endregion
 
 #endregion
 
@@ -101,33 +121,27 @@ app.UseForwardedHeaders();
 
 /*
  
-Plain-English answer you can give
+Internal vs External Endpoint availability:
 
 “Internal consumption” means the CRUD endpoints are for our own systems/admins, not exposed publicly. We secure and isolate them (network + auth), and we generate a separate internal Swagger.
 
 “External consumption” is the single bloop endpoint that the client calls. It has stricter public controls (rate limiting, CORS, JWT), and a separate external Swagger definition.
 
-If you want, I can show a simple reverse-proxy config (NGINX/YARP) that exposes only /api/v1/messages/* to the internet and blocks /api/v1/internal/*. 
+We should use a simple reverse-proxy config (NGINX/YARP) that exposes only /api/v1/messages/* to the internet and blocks /api/v1/internal/*. 
 
  */
-app.UseSwagger(c =>
-{
-    c.PreSerializeFilters.Add((doc, req) =>
-    {
-        // Handy debug: prints doc title and how many paths made it in
-        Console.WriteLine($"[SWAGGER BUILD] {doc.Info?.Title} -> paths={doc.Paths?.Count ?? 0}");
-    });
-});
+
+app.UseSwagger();
 app.UseSwaggerUI(ui =>
 {
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
     var audiences = new[] { AudienceAttribute.Internal, AudienceAttribute.External };
 
     foreach (var desc in provider.ApiVersionDescriptions)             // desc.GroupName == "v1.0"
-        foreach (var aud in audiences)                                    // "internal" / "external"
+        foreach (var aud in audiences)                                // "internal" / "external"
         {
-            var group = $"{aud}-{desc.GroupName}";                         // e.g. "internal-v1.0"
-            ui.SwaggerEndpoint($"/swagger/{group}/swagger.json",          // ABSOLUTE path; ".json" spelled right
+            var group = $"{aud}-{desc.GroupName}";                    // e.g. "internal-v1.0"
+            ui.SwaggerEndpoint($"/swagger/{group}/swagger.json",         
                 $"SensitiveWords {aud.ToUpperInvariant()} {desc.GroupName}");
         }
 
