@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using SensitiveWords.API.Extensions;
 using SensitiveWords.API.V1.Contracts;
+using SensitiveWords.API.V1.Extensions;
 using SensitiveWords.Application.Abstractions.Services;
 using SensitiveWords.Application.Attributes;
 using SensitiveWords.Application.Common.Responses;

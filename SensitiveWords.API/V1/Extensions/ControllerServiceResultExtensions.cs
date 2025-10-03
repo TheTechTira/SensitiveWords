@@ -3,7 +3,7 @@ using SensitiveWords.Application.Common.Enums;
 using SensitiveWords.Application.Common.Responses;
 using SensitiveWords.Application.Common.Results;
 
-namespace SensitiveWords.API.Extensions
+namespace SensitiveWords.API.V1.Extensions
 {
     /// <summary>
     /// Controller helpers to convert <see cref="ServiceResult{T}"/> into typed HTTP responses.

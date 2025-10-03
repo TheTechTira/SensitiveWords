@@ -3,10 +3,7 @@ using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using SensitiveWords.Application.Abstractions.Services;
 using SensitiveWords.Application.Attributes;
-using SensitiveWords.Application.Common.Responses;
-using SensitiveWords.Domain.Dtos;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 
