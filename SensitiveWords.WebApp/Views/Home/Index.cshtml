@@ -1,0 +1,78 @@
+﻿@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="chat-app">
+    <!-- LEFT: Controls / Panels -->
+    <aside class="sidebar">
+        <div class="panel">
+            <div class="panel-title">Profile</div>
+            <div class="stack gap-8">
+                <div class="muted">Connected as</div>
+                <input type="text" id="userName" placeholder="Enter your name" class="input" />
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Message</div>
+            <div class="stack gap-8">
+                <input type="text" id="messageInput" placeholder="Type a message…" class="input" />
+                <button id="sendToAllButton" class="btn primary w-100">Send to All</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Groups</div>
+            <div class="stack gap-8">
+                <div class="row">
+                    <input type="text" id="groupNameInput" placeholder="Group name" class="input" />
+                </div>
+                <div class="row actions">
+                    <button id="joinGroupButton" class="btn w-100">Join</button>
+                    <button id="leaveGroupButton" class="btn w-100">Leave</button>
+                </div>
+                <button id="sendToGroupButton" class="btn outline w-100">Send to Group</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Direct Message</div>
+            <h3 id="UserId" class="userid">—</h3>
+            <div class="stack gap-8">
+
+                <input type="text" id="userIdInput" placeholder="Target user ID" class="input" />
+                <button id="sendToUserButton" class="btn w-100">Send to User</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- RIGHT: Chat Window -->
+    <main class="chat">
+        <header class="chat-header">
+            <div>
+                <h2>Chat</h2>
+                <div class="muted small">Sensitive Words Demo • looks like a <strong>TEMU</strong> WhatsApp</div>
+            </div>
+        </header>
+
+        <div id="chatWindow" class="chat-window">
+            <ul id="messages" class="messages">
+                <!-- Your chat.js should append <li> items here.
+                     Use classes "msg me" (right) and "msg them" (left). -->
+                <!-- Example structure:
+                <li class="msg me">
+                  <div class="bubble">
+                    <div class="text">Hello world</div>
+                    <div class="meta">You • 18:04</div>
+                  </div>
+                </li>
+                -->
+            </ul>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
+    <script src="/js/chat.js"></script>
+}
