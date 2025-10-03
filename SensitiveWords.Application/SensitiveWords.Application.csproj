@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Common\Enums\EnumServiceResultStatus.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SensitiveWords.Domain\SensitiveWords.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
