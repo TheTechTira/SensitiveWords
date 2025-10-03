@@ -12,7 +12,7 @@ namespace SensitiveWords.Application.Common.Results
     ///   instead of manually constructing.
     /// - Allows services/controllers to handle outcomes consistently.
     /// </summary>
-    public sealed class RepositoryResult<T>
+    public class RepositoryResult<T>
     {
         /// <summary>
         /// Overall outcome of the repository call (Ok, NotFound, Conflict, etc).

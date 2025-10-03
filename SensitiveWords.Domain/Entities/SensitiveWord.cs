@@ -3,7 +3,7 @@
     /// <summary>
     /// Sensitive word entity from database for internal use
     /// </summary>
-    public sealed class SensitiveWord
+    public class SensitiveWord
   {
     public int Id { get; init; }
     public string Word { get; init; } = "";

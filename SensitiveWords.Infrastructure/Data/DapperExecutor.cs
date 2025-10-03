@@ -1,17 +1,12 @@
 ﻿using Dapper;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SensitiveWords.Infrastructure.Data
 {
     /// <summary>
     /// Production Dapper executor. Very thin pass-through.
     /// </summary>
-    public sealed class DapperExecutor : IDapperExecutor
+    public class DapperExecutor : IDapperExecutor
     {
         public Task<T?> QuerySingleOrDefaultAsync<T>(IDbConnection conn, CommandDefinition command)
             => conn.QuerySingleOrDefaultAsync<T>(command);

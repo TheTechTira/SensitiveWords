@@ -43,7 +43,7 @@
     /// actual list of items along with pagination metadata.
     /// </summary>
     /// <typeparam name="T">The type of items being paged.</typeparam>
-    public sealed class PagedResult<T> : IPagedResult
+    public class PagedResult<T> : IPagedResult
     {
         /// <summary>
         /// The items for the current page.
