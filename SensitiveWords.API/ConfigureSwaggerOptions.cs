@@ -80,8 +80,6 @@ Returns:
   "matches":  2,
   "elapsedMs": 3
 }
-
-
 """;
             #endregion
 
