@@ -9,7 +9,7 @@ using SensitiveWords.Domain.Dtos;
 namespace SensitiveWords.API.V1.Controllers
 {
     /// <summary>
-    /// Message “blooping” (masking) endpoint (External Use API).
+    /// Message "blooping" (masking) endpoint (External Use API).
     /// </summary>
     [ApiController]
     [ApiVersion("1.0")]

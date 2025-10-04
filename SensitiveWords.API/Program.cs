@@ -194,9 +194,9 @@ app.UseForwardedHeaders();
  
 Internal vs External Endpoint availability:
 
-“Internal consumption” means the CRUD endpoints are for our own systems/admins, not exposed publicly. We secure and isolate them (network + auth), and we generate a separate internal Swagger.
+"Internal consumption" means the CRUD endpoints are for our own systems/admins, not exposed publicly. We secure and isolate them (network + auth), and we generate a separate internal Swagger.
 
-“External consumption” is the single bloop endpoint that the client calls. It has stricter public controls (rate limiting, CORS, JWT), and a separate external Swagger definition.
+"External consumption" is the single bloop endpoint that the client calls. It has stricter public controls (rate limiting, CORS, JWT), and a separate external Swagger definition.
 
 We should use a simple reverse-proxy config (NGINX/YARP) that exposes only /api/v1/messages/* to the internet and blocks /api/v1/internal/*. 
 
