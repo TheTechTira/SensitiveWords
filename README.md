@@ -221,7 +221,7 @@ The service also includes:
 | **API** | Exposes REST endpoints for CRUD and business logic (blooping). |
 | **Application / Services** | Contains core logic such as `BloopService` and `SensitiveWordsService`. |
 | **Repository (Data)** | Dapper-based SQL layer for async CRUD operations. |
-| **Domain Models** | Defines entities (`SensitiveWord`, `MetaData`, etc.) and DTOs. |
+| **Domain Models** | Defines entities (`SensitiveWord`, etc.) and DTOs. |
 | **Infrastructure** | Handles caching, configuration, and database connections. |
 | **WebApp Demo (SignalR)** | Real-time chat simulation showing the API in action. |
 
@@ -240,14 +240,14 @@ Client App → SensitiveWords.API (/bloop) → Regex masking using cached sensit
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/SensitiveWords.git
+git clone https://github.com/TheTechTira/SensitiveWords.git
 cd SensitiveWords
 ```
 
 ### 2. Database Setup
 
 1. Ensure you have **SQL Server** running (local or container).
-2. Use the provided `db.sql` script (inside the project root or `/Database`) to create and seed the database:
+2. Use the provided `db.sql` script (inside the project root) to create and seed the database:
 
 ```bash
 SQLCMD -S .\SQLEXPRESS -i db.sql
@@ -260,7 +260,7 @@ SQLCMD -S .\SQLEXPRESS -i db.sql
 
 ### 3. Configuration
 
-In `appsettings.json` (under `SensitiveWords.API`):
+In `appsettings.json` (under `SensitiveWords.API`) replace with your DB connection string:
 
 ```json
 "ConnectionStrings": {
@@ -268,7 +268,7 @@ In `appsettings.json` (under `SensitiveWords.API`):
 }
 ```
 
-In `SensitiveWords.WebApp`:
+In `SensitiveWords.WebApp` replace the SensitiveWordsAPI with your SensitiviveWords.API localhost or URL:
 
 ```json
 "Microservice": {
@@ -362,7 +362,7 @@ Unit tests were implemented using **xUnit** and **Moq**.
 ### Performance
 - Cached regex avoids repetitive DB lookups.
 - Regex compiled once per version.
-- Rate limiting added via `Program.cs`.
+- Rate limiting (very basic) added via `Program.cs`.
 
 ---
 
@@ -390,14 +390,7 @@ Recommended production setup:
 - **External endpoints** behind gateway auth and rate limiting.
 - Monitored using **Application Insights** / **OpenTelemetry**.
 
----
 
-## 👨‍💻 Author
-
-**Jandre Janse van Vuuren**  
-Software Architect & IoT Engineer — VUUREEN (Pty) Ltd  
-📧 email@example.com  
-🌐 [https://vuureen.com](https://vuureen.com)
 
 ---
 
