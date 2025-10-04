@@ -268,7 +268,7 @@ In `appsettings.json` (under `SensitiveWords.API`) replace with your DB connecti
 }
 ```
 
-In `SensitiveWords.WebApp` replace the SensitiveWordsAPI with your SensitiviveWords.API localhost or URL:
+In `SensitiveWords.WebApp` replace the `SensitiveWordsApi` with your SensitiveWords.API localhost or URL:
 
 ```json
 "Microservice": {
