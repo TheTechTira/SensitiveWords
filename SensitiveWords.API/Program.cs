@@ -217,6 +217,8 @@ app.UseSwaggerUI(ui =>
         }
 
     ui.DocumentTitle = "SensitiveWords API";
+
+    ui.DisplayRequestDuration();
 });
 
 app.UseHttpsRedirection();

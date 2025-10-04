@@ -1,10 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+		<!-- optional: ignore missing XML docs warnings -->
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Dapper" Version="2.1.66" />
@@ -13,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\SensitiveWords.Application\SensitiveWords.Application.csproj" />
+		<ProjectReference Include="..\SensitiveWords.Application\SensitiveWords.Application.csproj" />
 	</ItemGroup>
 
 </Project>

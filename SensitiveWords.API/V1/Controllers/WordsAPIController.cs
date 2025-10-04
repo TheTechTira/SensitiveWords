@@ -7,36 +7,19 @@ using SensitiveWords.Application.Attributes;
 using SensitiveWords.Application.Common.Responses;
 using SensitiveWords.Application.Common.Results;
 using SensitiveWords.Domain.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SensitiveWords.API.V1.Controllers
 {
     /// <summary>
-    /// INTERNAL API — Sensitive Words CRUD.
+    /// Sensitive words management (internal only). Do not expose publicly.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// ⚠️ <b>Internal only:</b> These endpoints are for back-office or service-to-service use. In production,
-    /// expose them only behind an API gateway / auth proxy / private network.
-    /// </para>
-    /// <para>
-    /// 🔒 <b>Swagger visibility:</b> Do not publish these on public Swagger UIs. Options:
-    /// </para>
-    /// <list type="bullet">
-    ///   <item><description>Serve Swagger only on internal networks or require authentication.</description></item>
-    ///   <item><description>Filter by audience/version using a DocInclusionPredicate (e.g., <c>internal-v1.0</c> group).</description></item>
-    ///   <item><description>For public deployments, set <c>[ApiExplorerSettings(IgnoreApi = true)]</c> or exclude this controller via a document/operation filter.</description></item>
-    /// </list>
-    /// <para>
-    /// 📦 <b>Response contract:</b> Success responses are produced via <c>ToActionResult</c> —
-    /// by default that returns a <c>SuccessResponse&lt;T&gt;</c> envelope; errors use <c>ErrorResponse</c>.
-    /// </para>
-    /// </remarks>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/sensitive-words")]
     [Audience(AudienceAttribute.Internal)]
     [Produces("application/json")]
-    [Tags("SensitiveWords")]
+    [Tags("Sensitive Words")]
     // NOTE: For public builds, uncomment to hide these endpoints from Swagger:
     // [ApiExplorerSettings(IgnoreApi = true)]
     public class WordsAPIController : ControllerBase
@@ -47,6 +30,7 @@ namespace SensitiveWords.API.V1.Controllers
         /// <summary>
         /// List sensitive words (paged).
         /// </summary>
+        /// <remarks>Heyto</remarks>
         /// <param name="page">1-based page number (default 1).</param>
         /// <param name="pageSize">Page size (default 50; server clamps, max 200).</param>
         /// <param name="search">Optional case-insensitive LIKE filter on <c>word</c>.</param>
