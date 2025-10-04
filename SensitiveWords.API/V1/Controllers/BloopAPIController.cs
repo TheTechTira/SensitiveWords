@@ -9,56 +9,14 @@ using SensitiveWords.Domain.Dtos;
 namespace SensitiveWords.API.V1.Controllers
 {
     /// <summary>
-    /// EXTERNAL API — Message “blooping” (masking) endpoint.
+    /// Message “blooping” (masking) endpoint (External Use API).
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Public-facing endpoint to scan a message and mask sensitive words/phrases. This route is intended
-    /// for first-party clients (web/app/services). It returns a <see cref="BloopResponseDto"/> directly
-    /// (no envelope), to keep the contract small and simple for external callers.
-    /// </para>
-    /// <para>
-    /// 🔐 <b>Security:</b> Protect this route with your API gateway and authentication (e.g., JWT/OIDC)
-    /// before exposing publicly. Apply rate-limiting (configured via <c>BloopPerHour</c> policy) to deter abuse.
-    /// </para>
-    /// <para>
-    /// 🧠 <b>Matching mode:</b> The request’s <c>WholeWord</c> flag controls boundary handling. When true,
-    /// the underlying regex uses word edges where appropriate; when false, matches substrings anywhere.
-    /// </para>
-    /// <para>
-    /// 📄 <b>Example request</b>:
-    /// <code>
-    /// POST /api/v1.0/messages/bloop
-    /// {
-    ///   "message": "Please don't DROP TABLE users;",
-    ///   "wholeWord": true
-    /// }
-    /// </code>
-    /// <b>Example response</b>:
-    /// <code>
-    /// {
-    ///   "original": "Please don't DROP TABLE users;",
-    ///   "blooped":  "Please don't **** ***** users;",
-    ///   "matches":  2,
-    ///   "elapsedMs": 3
-    /// }
-    /// </code>
-    /// </para>
-    /// <para>
-    /// Notes:
-    /// <list type="bullet">
-    ///   <item><description>Validation errors (e.g., missing <c>message</c>) return <c>400</c> with your standard error body.</description></item>
-    ///   <item><description>When rate limit is exceeded, returns <c>429</c> (per <c>BloopPerHour</c> policy).</description></item>
-    ///   <item><description>Server faults return <c>500</c> with a trace id.</description></item>
-    /// </list>
-    /// </para>
-    /// </remarks>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/messages")]
     [Audience(AudienceAttribute.External)]
     [Produces("application/json")]
-    [Tags("Bloop")]
+    [Tags("Bloop Messages")]
     [EnableRateLimiting("BloopPerHour")]// Enable rate limiting policy at the controller level (can be overridden per action)
     public class BloopAPIController : ControllerBase
     {

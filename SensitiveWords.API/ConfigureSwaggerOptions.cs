@@ -20,27 +20,71 @@ namespace SensitiveWords.API
 
         public void Configure(SwaggerGenOptions opt)
         {
-            // include XML for API + referenced assemblies that have models
-            var assemblies = new[]
+            // Include XML docs (controller-level comments require includeControllerXmlComments: true)
+            var asm = Assembly.GetExecutingAssembly();
+            var xmlFiles = new[]
             {
-        Assembly.GetExecutingAssembly(),        // API (controllers)
-        //typeof(SensitiveWordDto).Assembly,      
-        //typeof(ErrorResponse).Assembly
-    }.Distinct();
+        Path.Combine(AppContext.BaseDirectory, $"{asm.GetName().Name}.xml"),
 
-            foreach (var asm in assemblies)
-            {
-                // try AppContext first (debug/publish), then fall back to the assembly’s own folder
-                var xml1 = Path.Combine(AppContext.BaseDirectory, $"{asm.GetName().Name}.xml");
-                var xml2 = string.IsNullOrEmpty(asm.Location) ? null : Path.ChangeExtension(asm.Location, ".xml");
+        // Add other assemblies that contain controllers/DTOs if needed:
+         Path.Combine(AppContext.BaseDirectory, "SensitiveWords.Application.xml"),
+         Path.Combine(AppContext.BaseDirectory, "SensitiveWords.Domain.xml"),
+         Path.Combine(AppContext.BaseDirectory, "SensitiveWords.Infrastructure.xml"),
+    };
 
-                if (File.Exists(xml1)) opt.IncludeXmlComments(xml1, includeControllerXmlComments: true);
-                else if (xml2 is not null && File.Exists(xml2)) opt.IncludeXmlComments(xml2, includeControllerXmlComments: true);
-            }
+            foreach (var xml in xmlFiles)
+                if (File.Exists(xml))
+                    opt.IncludeXmlComments(xml, includeControllerXmlComments: true);
+
+            // Register our filter, pass XML paths so it can read <summary>/<remarks>
+            opt.DocumentFilter<ControllerRemarksToTagDescriptionFilter>();
 
             opt.CustomSchemaIds(FriendlySchemaId);
 
             opt.EnableAnnotations();
+
+            #region Internal + External Doc Descriptions
+
+            var internalDesc = """
+**INTERNAL API (Internal only)**  
+These endpoints are for back-office or service-to-service use. In production, expose them only behind an API gateway / auth proxy / private network.
+
+**Swagger visibility**  
+- Serve Swagger only on internal networks, gateways or require authentication.  
+- Filter by audience/version via DocInclusionPredicate (e.g., `internal-v1.0`).  
+- For public deployments, use `[ApiExplorerSettings(IgnoreApi = true)]` or exclude via filters.
+""";
+
+            var externalDesc = """
+**EXTERNAL API — Message “Blooping” Endpoint**
+
+Public-facing endpoint to scan a message and mask sensitive words/phrases.
+Intended for first-party clients (web/app/services).  
+Returns a `BloopResponseDto` directly (no envelope) for compactness.
+
+**Security**
+Protect this route with your API gateway and authentication (JWT/OIDC).  
+Apply the `BloopPerHour` rate-limit policy to deter abuse.
+
+**Example**
+```http
+POST /api/v1.0/messages/bloop
+{"message": "Please don't DROP TABLE users;",
+  "wholeWord": true
+}
+
+Returns:
+{
+  "original": "Please don't DROP TABLE users;",
+  "blooped":  "Please don't **** ***** users;",
+  "matches":  2,
+  "elapsedMs": 3
+}
+
+
+""";
+            #endregion
+
 
             // Register {audience × version}
             var audiences = new[] { AudienceAttribute.Internal, AudienceAttribute.External };
@@ -48,11 +92,15 @@ namespace SensitiveWords.API
                 foreach (var aud in audiences)
                 {
                     var docName = $"{aud}-{desc.GroupName}";                      // "internal-v1.0"
+                    var isInternal = aud.Equals(AudienceAttribute.Internal, StringComparison.OrdinalIgnoreCase);
+
                     opt.SwaggerDoc(docName, new OpenApiInfo
                     {
                         Title = $"SensitiveWords ({aud.ToUpperInvariant()})",
                         Version = desc.ApiVersion.ToString(),
-                        Description = $"Audience: {aud}, API Version: {desc.ApiVersion}"
+                        Description = isInternal
+        ? internalDesc
+        : $"Audience: {aud}, API Version: {desc.ApiVersion}\n\n{externalDesc}"
                     });
                 }
 
