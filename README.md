@@ -237,6 +237,114 @@ In production, this microservice would typically be deployed as:
 
 ---
 
+## 🚀 Production Deployment Walkthrough & Best Practices
+
+This service is designed to run as an **independent microservice** behind an API gateway, with a managed MSSQL database and observable, secure, and scalable defaults.
+
+### 1) Build & Package
+
+**Docker (recommended)**
+```dockerfile
+# Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet restore "SensitiveWords.sln"
+RUN dotnet publish "SensitiveWords.API/SensitiveWords.API.csproj" -c Release -o /out
+
+FROM base AS final
+WORKDIR /app
+COPY --from=build /out .
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "SensitiveWords.API.dll"]
+```
+
+Build & run locally:
+```bash
+docker build -t sensitivewords-api:1.0 .
+docker run -p 7012:8080   -e ConnectionStrings__DefaultConnection="Server=<host>;Database=SensitiveWordsDB;User Id=<user>;Password=<pwd>;TrustServerCertificate=True"   -e ASPNETCORE_ENVIRONMENT=Production   sensitivewords-api:1.0
+```
+
+### 2) Networking & Gateway
+
+- Put the service **behind a gateway** (Nginx, Traefik, AWS ALB, Azure APIM).
+- Terminate TLS at the gateway and forward to the container on `8080`.
+- Expose **only** the external `/api/v1/bloop` route publicly; keep CRUD endpoints internal (VPC-only or IP allow list).
+
+**Nginx example (snippet):**
+```nginx
+location /api/v1/bloop {
+  proxy_pass http://sensitivewords-api:8080;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header Host $host;
+}
+```
+
+### 3) Database (MSSQL)
+
+- Use **managed MSSQL** (Azure SQL / AWS RDS).  
+- Principle of least privilege: dedicated login with `SELECT/INSERT/UPDATE/DELETE` on relevant tables only.  
+- Enable **automated backups** (point-in-time restore).  
+- Store connection strings in **secret stores** (AWS Secrets Manager / Azure Key Vault).
+
+### 4) Config & Secrets
+
+- Use environment variables or secret stores; never commit secrets.
+- Required settings:
+  - `ConnectionStrings:DefaultConnection`
+  - `Serilog` / logging level (optional)
+  - `RateLimiting` settings (optional)
+
+### 5) Security
+
+- **AuthN/AuthZ**:
+  - Protect Internal CRUD with **JWT/OIDC** or gateway policies.
+  - Public `/bloop` behind API keys or client credentials.
+- **Input Validation**: model validation + size limits for payloads.
+- **Rate Limiting**: per API key / per IP policies at gateway and app level.
+- **CORS**: restrict origins to known frontends.
+- **Headers**: HSTS, X-Content-Type-Options, X-Frame-Options, etc. (via gateway).
+
+### 6) Observability
+
+- **Health endpoints**: `GET /health/ready` and `GET /health/live` (add if not present).
+- **Metrics**: request latency, cache hit ratio, DB roundtrips, match counts.
+- **Tracing**: enable OpenTelemetry (traceId in logs).
+- **Logging**: structured (Serilog) with JSON sinks; centralize to CloudWatch/App Insights/ELK.
+
+### 7) Scalability & HA
+
+- Run **2+ replicas** behind the gateway.
+- Use **distributed cache** (Redis) for regex/version if horizontally scaling.
+- Use **rolling deployments** and **readiness probes** to avoid cold-start traffic.
+
+### 8) CI/CD (example)
+
+- **Build**: `dotnet restore && dotnet build && dotnet test`  
+- **Package**: `dotnet publish -c Release` → Docker build & push (GHCR/ECR/ACR).  
+- **Deploy**: GitHub Actions → environment approvals → Kubernetes/VM.  
+- **Smoke tests**: hit `/api/v1/bloop` with a known payload in a staging slot.
+
+### 9) Backup, DR & Compliance
+
+- DB PITR enabled; daily snapshots retained per policy.
+- Export **seed list** versioned in storage (S3/Blob) for quick bootstrap.
+- Run **regular restore drills** to validate backups (quarterly).
+
+### 10) Cost Awareness
+
+- Start with small DB tiers and single-node containers; scale out with traffic.  
+- Monitor egress bandwidth on gateways; cache aggressively to avoid DB spikes.
+
+> **Summary**: Containerize the API, protect it behind a gateway, keep CRUD internal, use managed MSSQL, add health/metrics/logging, and scale with replicas + distributed cache. Keep secrets in a vault and automate build, test, and deploy.
+
+---
+
 > 🧠 **Developer Note:**  
 > Everything above this point covers the original interview brief and my understanding of the challenge.  
 > From here onward, you’ll find the full technical documentation and setup guide for the implemented microservice.
