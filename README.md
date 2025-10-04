@@ -181,6 +181,49 @@ Added a demo project: **`SensitiveWords.WebApp`** — a C# .NET 8 MVC app with *
 
 ---
 
+# ⚡ Performance Enhancements
+
+Several optimizations were implemented and planned to improve performance, scalability, and responsiveness of the microservice:
+
+### Regex Compilation & Caching
+Sensitive word patterns are compiled and cached in memory to avoid rebuilding regex patterns on every request.
+
+### Version-Based Cache Invalidation
+A version token from the database determines whether cached regex data is still valid, avoiding redundant DB calls.
+
+### Async Dapper Operations
+All database operations use asynchronous Dapper queries for efficient I/O.
+
+### MemoryCache (in-memory storage)
+Keeps hot data and reduces database hits on the bloop endpoint.
+
+### Minimal API Surface
+The external endpoint returns lightweight DTOs without wrapping envelopes to reduce payload size.
+
+### Rate Limiting
+Built-in per-IP rate limit to prevent abuse and keep throughput consistent under high load.
+
+### Logging & Timing
+Each bloop request tracks elapsed processing time to monitor and profile runtime performance.
+
+---
+
+# 🧩 Additional Enhancements (Future Improvements)
+
+To make the project more complete and production-ready, I would consider the following:
+
+| Area | Enhancement |
+|------|--------------|
+| **Caching** | Use distributed caching (Redis/Memcached) with pub/sub invalidation across instances. |
+| **Scalability** | Run behind a load balancer or gateway (e.g., Nginx, AWS ALB) with auto-scaling containers. |
+| **Security** | Add JWT/OAuth2 for internal endpoints and API-key authorization for external ones. |
+| **DevOps** | Containerize with Docker, add CI/CD pipeline, and deploy to AWS ECS, Azure App Service, or Kubernetes. |
+| **Monitoring** | Integrate Application Insights or Prometheus metrics to monitor latency and cache hits. |
+| **Auditing** | Add audit trails for word changes and administrative CRUD operations. |
+| **Extensibility** | Support categories, severity levels, and organization-level sensitive lists for multi-tenant usage. |
+
+---
+
 ### ☁️ Deployment Thoughts
 
 In production, this microservice would typically be deployed as:
